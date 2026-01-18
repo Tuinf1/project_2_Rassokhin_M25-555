@@ -16,3 +16,8 @@ linux
 
  poetry config virtualenvs.in-project true  
  
+
+git add .
+git commit -m "Краткое описание изменений"
+
+git push
