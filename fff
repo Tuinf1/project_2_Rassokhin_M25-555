@@ -21,3 +21,11 @@ git add .
 git commit -m "Краткое описание изменений"
 
 git push
+
+
+DONT WORK! 
+poetry env activate
+WORK^ 
+poetry shell
+for exit: 
+exit
