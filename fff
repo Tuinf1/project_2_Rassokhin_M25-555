@@ -29,3 +29,7 @@ WORK^
 poetry shell
 for exit: 
 exit
+
+
+source .venv/bin/activate
+which python
