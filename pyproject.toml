@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "project-2-rassokhin-m25-555"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = ["Rassokhin Vladislav <rassokhinvladislav@mail.ru>"]
 readme = "README.md"
@@ -18,6 +18,18 @@ python = "^3.12"
 prompt = "^0.4.1"
 
 
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.14.13"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+exclude = ["venv", ".venv", "dist", "pycache"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = []
