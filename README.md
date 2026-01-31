@@ -2,6 +2,19 @@ source .venv/bin/activate
 make install
 make project
 
+## 🎥 Демо работы приложения 1 часть
+
+В видео ниже показано:
+- установка пакета
+- запуск базы данных
+- создание таблицы
+- проверка
+- удаление таблицы
+
+[![asciinema demo](https://asciinema.org/a/wTaXfkHWZUZmCst8)](https://asciinema.org/a/wTaXfkHWZUZmCst8)
+
+
+
 ## 📋 Управление таблицами
 
 Программа поддерживает базовые команды управления таблицами через консольный интерфейс. Все таблицы сохраняются в файле db_meta.json.
