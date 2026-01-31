@@ -2,7 +2,9 @@ source .venv/bin/activate
 make install
 make project
 
-## 🎥 Демо работы приложения 1 часть
+poetry add prettytable
+
+## 🎥 Демо работы приложения 1 часть version = "0.4.1"
 
 В видео ниже показано:
 - установка пакета
