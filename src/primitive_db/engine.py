@@ -1,14 +1,8 @@
 import shlex
 from typing import Any
 
-from src.primitive_db.core import create_table, drop_table 
-from src.primitive_db.utils import (
-    METADATA_PATH,
-    DATA_DIR,
-    load_metadata,
-    save_metadata
-)
-
+from src.primitive_db.core import create_table, drop_table
+from src.primitive_db.utils import DATA_DIR, METADATA_PATH, load_metadata, save_metadata
 
 
 def _print_banner() -> None:
@@ -117,7 +111,8 @@ def run() -> None:
         
         if cmd == "create_table":
             if len(args) < 1:
-                print("Ошибка: нужно имя таблицы. Пример: create_table users name:str age:int")
+                print("Ошибка: нужно имя таблицы. Пример: create_table users " \
+                "name:str age:int")
                 continue
 
             table_name = args[0]

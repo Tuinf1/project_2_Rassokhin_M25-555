@@ -1,8 +1,7 @@
 import json
 from pathlib import Path
 
-
-# === Константы путей ===
+# Константы путей
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR
 METADATA_FILENAME = "db_meta.json"

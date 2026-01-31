@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "project-2-rassokhin-m25-555"
-version = "0.1.1"
+version = "0.1.2"
 description = ""
 authors = ["Rassokhin Vladislav <rassokhinvladislav@mail.ru>"]
 readme = "README.md"
@@ -10,7 +10,7 @@ packages = [
  ]
 
 [tool.poetry.scripts]
-project = "src.primitive_db.main:main"
+database = "src.primitive_db.main:main"
 
 
 [tool.poetry.dependencies]

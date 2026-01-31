@@ -1,11 +1,6 @@
 from typing import Any
 
-from src.primitive_db.utils import (
-    METADATA_PATH,
-    DATA_DIR,
-    
-    save_metadata
-)
+from src.primitive_db.utils import DATA_DIR, METADATA_PATH, save_metadata
 
 SUPPORTED_TYPES: set[str] = {"int", "str", "bool"}
 
@@ -58,11 +53,13 @@ def create_table(
     # 4) парсинг и проверка столбцов
     for raw in columns:
         if not isinstance(raw, str):
-            raise TypeError("Каждый элемент columns должен быть строкой вида 'name:type'.")
+            raise TypeError("Каждый элемент columns должен быть \
+                            строкой вида 'name:type'.")
 
         item = raw.strip()
         if ":" not in item:
-            raise ValueError(f'Некорректное значение: "{raw}". Ожидается формат "name:type".')
+            raise ValueError(f'Некорректное значение: \
+                             "{raw}". Ожидается формат "name:type".')
 
         name, col_type = item.split(":", 1)
         name = name.strip()
@@ -72,7 +69,8 @@ def create_table(
             raise ValueError(f'Некорректное имя столбца в "{raw}".')
 
         if name == "ID":
-            raise ValueError('Столбец "ID" добавляется автоматически. Не передавайте его в columns.')
+            raise ValueError('Столбец "ID" добавляется автоматически. ' \
+            'Не передавайте его в columns.')
 
         if name in table_columns:
             raise ValueError(f'Дублирование столбца "{name}".')
