@@ -4,8 +4,8 @@ from pathlib import Path
 
 # === Константы путей ===
 BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data"
-METADATA_FILENAME = "metadata.json"
+DATA_DIR = BASE_DIR
+METADATA_FILENAME = "db_meta.json"
 METADATA_PATH = DATA_DIR / METADATA_FILENAME
 
 
@@ -20,11 +20,14 @@ def load_metadata(filepath: str):
 
     # загрузка данных из json 
     try:
+        
         with path.open("r", encoding="utf-8") as f:
             data = json.load(f)
+            
+            return data
     except FileNotFoundError:
         return {}
-    return data
+    
     
 
 def save_metadata(filepath: str, data: dict):

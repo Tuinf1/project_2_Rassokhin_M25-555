@@ -1,5 +1,11 @@
 from typing import Any
 
+from src.primitive_db.utils import (
+    METADATA_PATH,
+    DATA_DIR,
+    
+    save_metadata
+)
 
 SUPPORTED_TYPES: set[str] = {"int", "str", "bool"}
 
@@ -97,6 +103,8 @@ def drop_table(metadata: dict[str, Any], table_name: str) -> dict[str, Any]:
       }
     }
     """
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    metadata_path = METADATA_PATH
 
     if not isinstance(metadata, dict):
         raise TypeError("metadata должен быть dict.")
@@ -117,5 +125,6 @@ def drop_table(metadata: dict[str, Any], table_name: str) -> dict[str, Any]:
         raise ValueError(f'Таблица "{table_name}" не существует.')
 
     del tables[table_name]
+    save_metadata(metadata_path, metadata)
     return metadata
 

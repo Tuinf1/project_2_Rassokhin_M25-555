@@ -15,7 +15,7 @@ def _print_banner() -> None:
     print("Первая попытка запустить проект!")
     print("***")
 
-
+# команда help
 def _print_help() -> None:
     print("<command> help - справочная информация")
     print("<command> exit - выйти из программы")
@@ -26,8 +26,26 @@ def _print_help() -> None:
     print()
     print("<command> drop_table <table_name>")
     print("          пример: drop_table users")
+    print()
+    print("<command> list_tables - показать список всех таблиц\n")
+
+# команда показать существующие таблицы
+def list_tables(metadata: dict) -> None:
+    """
+    Показывает список всех таблиц в метаданных.
+    """
+    tables = metadata.get("tables", {})
+
+    if not tables:
+        print("Нет ни одной таблицы.")
+        return
+
+    print("Список таблиц:")
+    for i, name in enumerate(tables, 1):
+        print(f"{i}. {name}")
 
 
+# нормализация строки
 def _normalize_command(tokens: list[str]) -> str:
     if not tokens:
         return ""
@@ -36,6 +54,9 @@ def _normalize_command(tokens: list[str]) -> str:
 
 def _print_prompt() -> None:
     print("Введите команду: ", end="")
+
+
+
 
 
 def run() -> None:
@@ -61,8 +82,6 @@ def run() -> None:
         # 1) Загружаем актуальные метаданные
         try:
             metadata: dict[str, Any] = load_metadata(metadata_path)
-            if metadata is None:
-                metadata = {}
         except Exception as exc:
             print(f"Ошибка чтения метаданных: {exc}")
             metadata = {}
@@ -92,6 +111,10 @@ def run() -> None:
             _print_help()
             continue
 
+        if cmd == "list_tables":
+            list_tables(metadata)
+            continue
+        
         if cmd == "create_table":
             if len(args) < 1:
                 print("Ошибка: нужно имя таблицы. Пример: create_table users name:str age:int")
