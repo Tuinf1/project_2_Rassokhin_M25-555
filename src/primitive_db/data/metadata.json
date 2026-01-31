@@ -1,0 +1,10 @@
+{
+  "tables": {
+    "af": {
+      "columns": {
+        "ID": "int",
+        "lock": "int"
+      }
+    }
+  }
+}

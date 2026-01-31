@@ -1,0 +1,16 @@
+{
+  "tables": {
+    "users": {
+      "columns": {
+        "ID": "int",
+        "name": "str"
+      }
+    },
+    "ff": {
+      "columns": {
+        "ID": "int",
+        "f": "int"
+      }
+    }
+  }
+}

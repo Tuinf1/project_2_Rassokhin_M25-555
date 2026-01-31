@@ -2,6 +2,13 @@ import json
 from pathlib import Path
 
 
+# === Константы путей ===
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data"
+METADATA_FILENAME = "metadata.json"
+METADATA_PATH = DATA_DIR / METADATA_FILENAME
+
+
 def load_metadata(filepath: str):
     """
     Загружает данные из JSON-файла.
@@ -19,6 +26,7 @@ def load_metadata(filepath: str):
         return {}
     return data
     
+
 def save_metadata(filepath: str, data: dict):
     """
     Сохраняет переданные данные в JSON-файл.
