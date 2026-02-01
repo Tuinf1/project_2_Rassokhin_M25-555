@@ -3,6 +3,7 @@ import json
 from typing import Any
 
 from src.primitive_db.utils import DATA_DIR, load_table_data, save_table_data
+from ..decorators import handle_db_errors, confirm_action, log_time
 
 SUPPORTED_TYPES = {
     "int": int,
@@ -93,45 +94,60 @@ def create_table(
 
     return metadata
 
-
-def drop_table(metadata: dict[str, Any], table_name: str) -> dict[str, Any]:
-    """
-    Удаляет таблицу из метаданных.
-
-    Ожидаемая структура:
-    metadata = {
-      "tables": {
-        "users": {"columns": {...}},
-        ...
-      }
-    }
-    """
+@handle_db_errors
+@confirm_action("удаление таблицы")
+def drop_table(metadata, table_name):
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    # metadata_path = METADATA_PATH
 
-    if not isinstance(metadata, dict):
-        raise TypeError("metadata должен быть dict.")
-
-    if not isinstance(table_name, str) or not table_name.strip():
-        raise ValueError("table_name должен быть непустой строкой.")
-
-    # гарантируем ключ tables (как и в create_table)
     if "tables" not in metadata:
         metadata["tables"] = {}
 
-    if not isinstance(metadata["tables"], dict):
-        raise TypeError('metadata["tables"] должен быть dict.')
-
-    tables: dict[str, Any] = metadata["tables"]
-
-    if table_name not in tables:
-        raise ValueError(f'Таблица "{table_name}" не существует.')
-
+    tables = metadata["tables"]
     del tables[table_name]
-    # save_metadata(metadata_path, metadata)
+
     return metadata
 
 
+# @handle_db_errors
+# @confirm_action("удаление таблицы")
+# def drop_table(metadata, table_name):
+#     """
+#     Удаляет таблицу из метаданных.
+
+#     Ожидаемая структура:
+#     metadata = {
+#       "tables": {
+#         "users": {"columns": {...}},
+#         ...
+#       }
+#     }
+#     """
+#     DATA_DIR.mkdir(parents=True, exist_ok=True)
+#     # metadata_path = METADATA_PATH
+
+#     if not isinstance(metadata, dict):
+#         raise TypeError("metadata должен быть dict.")
+
+#     if not isinstance(table_name, str) or not table_name.strip():
+#         raise ValueError("table_name должен быть непустой строкой.")
+
+#     # гарантируем ключ tables (как и в create_table)
+#     if "tables" not in metadata:
+#         metadata["tables"] = {}
+
+#     if not isinstance(metadata["tables"], dict):
+#         raise TypeError('metadata["tables"] должен быть dict.')
+
+#     tables: dict[str, Any] = metadata["tables"]
+
+#     if table_name not in tables:
+#         raise ValueError(f'Таблица "{table_name}" не существует.')
+
+#     del tables[table_name]
+#     # save_metadata(metadata_path, metadata)
+#     return metadata
+
+@log_time
 def select(table_data, where_clause=None):
     rows = table_data["rows"]
 
@@ -149,6 +165,7 @@ def select(table_data, where_clause=None):
             result.append(row)
 
     return result
+
 
 def info_table(table_name: str) -> None:
     if not table_name or not table_name.strip():
@@ -180,6 +197,28 @@ def info_table(table_name: str) -> None:
 
     print(f"Количество строк: {len(rows)}")
 
+# def delete(table_data, where_clause):
+#     rows = table_data["rows"]
+#     remaining = []
+#     deleted = []
+
+#     for row in rows:
+#         ok = True
+#         for key, value in where_clause.items():
+#             if row.get(key) != value:
+#                 ok = False
+#                 break
+
+#         if ok:
+#             deleted.append(row)
+#         else:
+#             remaining.append(row)
+
+#     table_data["rows"] = remaining
+#     return deleted
+
+@handle_db_errors
+@confirm_action("удаление записей")
 def delete(table_data, where_clause):
     rows = table_data["rows"]
     remaining = []
@@ -199,6 +238,7 @@ def delete(table_data, where_clause):
 
     table_data["rows"] = remaining
     return deleted
+
 
 
 
@@ -225,7 +265,7 @@ def update(table_data, set_clause, where_clause):
 
 
 
-
+@log_time
 def insert(metadata, table_name, values):
     # 1. Проверка существования таблицы
     if table_name not in metadata:

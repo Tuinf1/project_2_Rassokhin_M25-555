@@ -10,6 +10,10 @@ from src.primitive_db.utils import (
     save_table_data,
 )
 
+from src.decorators import handle_db_errors, confirm_action, create_cacher
+
+cache_select = create_cacher()
+
 # =========================
 # HELP
 # =========================
@@ -99,12 +103,22 @@ def create_table(table_name, columns_input):
 # DROP TABLE
 # =========================
 
+# def drop_table(table_name):
+#     table_file = DATA_DIR / f"{table_name}.json"
+#     if not table_file.exists():
+#         raise ValueError(f'Таблица "{table_name}" не существует.')
+
+#     table_file.unlink()
+#     print(f'OK: таблица "{table_name}" удалена')
+
+@handle_db_errors
+@confirm_action("удаление таблицы")
 def drop_table(table_name):
     table_file = DATA_DIR / f"{table_name}.json"
-    if not table_file.exists():
-        raise ValueError(f'Таблица "{table_name}" не существует.')
 
+    # KeyError / FileNotFoundError перехватит декоратор
     table_file.unlink()
+
     print(f'OK: таблица "{table_name}" удалена')
 
 
@@ -254,8 +268,6 @@ def run():
 
 
 
-
-
             # ---------- SELECT ----------
             elif cmd == "select":
                 if tokens[1] != "from":
@@ -263,14 +275,27 @@ def run():
 
                 table_name = tokens[2]
                 table_data = load_table_data(table_name)
+                
+
+
 
                 condition = None
                 if "where" in tokens:
                     where_expr = " ".join(tokens[tokens.index("where") + 1:])
                     condition = parse_where(where_expr)
 
-                rows = select(table_data, condition)
+                key = str(condition) if condition else "ALL"
 
+                    # ❗️ единственный вызов select — через кэш
+                rows = cache_select(
+                    key,
+                    lambda: select(table_data, condition)
+                )
+
+                # rows = select(table_data, condition)
+                
+                # result = cache_select(key, lambda: select(table_data, where_clause))
+                
                 if not rows:
                     print("Нет данных.")
                 else:
@@ -281,6 +306,9 @@ def run():
                         table.add_row(row.values())
 
                     print(table)
+
+                  
+
 
             # ---------- UPDATE ----------
             elif cmd == "update":
