@@ -315,3 +315,88 @@ def insert(metadata, table_name, values):
     save_table_data(table_name, table_data)
 
     return new_row
+
+# =========================
+# LIST TABLES
+# =========================
+
+def list_tables():
+    if not DATA_DIR.exists():
+        print("Таблицы отсутствуют.")
+        return
+
+    tables = [f.stem for f in DATA_DIR.iterdir() if f.suffix == ".json"]
+
+    if not tables:
+        print("Таблицы отсутствуют.")
+        return
+
+    print("Список таблиц:")
+    for name in sorted(tables):
+        print(f"  - {name}")
+
+
+
+
+# =========================
+# CREATE TABLE
+# =========================
+
+def create_table(table_name, columns_input):
+    table_file = DATA_DIR / f"{table_name}.json"
+    if table_file.exists():
+        raise ValueError(f'Таблица "{table_name}" уже существует.')
+
+    columns = {"ID": "int"}
+    valid_types = {"int", "str", "bool"}
+
+    for col in columns_input:
+        if ":" not in col:
+            raise ValueError("Формат столбца: name:type")
+
+        name, typ = col.split(":", 1)
+
+        if typ not in valid_types:
+            raise ValueError(f"Недопустимый тип: {typ}")
+
+        if name in columns:
+            raise ValueError(f"Столбец {name} уже существует")
+
+        columns[name] = typ
+
+    table_data = {
+        "columns": columns,
+        "rows": []
+    }
+
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    table_file.write_text(
+        json.dumps(table_data, ensure_ascii=False, indent=2),
+        encoding="utf-8"
+    )
+
+    print(f'OK: таблица "{table_name}" создана')
+
+# =========================
+# HELP
+# =========================
+
+def _print_help():
+    """Печать справки"""
+    print("\n***Процесс работы с таблицей***")
+    print("Функции:")
+    print("<command> create_table <имя_таблицы> <столбец1:тип> .. - создать таблицу")
+    print("<command> drop_table <имя_таблицы> - удалить таблицу")
+    print("<command> list_tables - показать список всех таблиц")
+    print("<command> insert into <имя_таблицы> values (<значение1>, ...) - " +
+      "добавить запись")
+    print("<command> select from <имя_таблицы> [where <столбец>=<значение>] - " +
+      "вывести записи")
+    print("<command> update <имя_таблицы> set <столбец> = "\
+    "<значение> where <условие> -" +
+      "обновить")
+    print("<command> delete from <имя_таблицы> where <столбец>=<значение> -" +
+      "удалить запись")
+    print("<command> info <имя_таблицы> - информация о таблице")
+    print("<command> exit - выйти")
+    print("<command> help - справка\n")
