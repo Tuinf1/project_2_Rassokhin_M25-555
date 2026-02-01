@@ -1,12 +1,14 @@
 import json
+
 from src.primitive_db.utils import (
     load_table_data,
     save_table_data,
     DATA_DIR,
 )
-from src.primitive_db.parser import  parse_values
+from src.primitive_db.parser import parse_where, parse_set
+from src.primitive_db.core import insert, select, update, delete
 
-from src.primitive_db.core import  insert
+from prettytable import PrettyTable
 # =========================
 # HELP
 # =========================
@@ -30,23 +32,17 @@ def _print_help():
     print("<command> exit - выйти")
     print("<command> help - справка\n")
 
+
 # =========================
-# LIST_TABLE
+# LIST TABLES
 # =========================
 
-def list_tables() -> None:
-    """
-    Показывает все таблицы (json-файлы в data/)
-    """
+def list_tables():
     if not DATA_DIR.exists():
         print("Таблицы отсутствуют.")
         return
 
-    tables = [
-        file.stem
-        for file in DATA_DIR.iterdir()
-        if file.is_file() and file.suffix == ".json"
-    ]
+    tables = [f.stem for f in DATA_DIR.iterdir() if f.suffix == ".json"]
 
     if not tables:
         print("Таблицы отсутствуют.")
@@ -58,41 +54,28 @@ def list_tables() -> None:
 
 
 # =========================
-# CREATE_TABLE
+# CREATE TABLE
 # =========================
 
-def create_table(table_name: str, columns_input: list[str]) -> None:
-    if not table_name or not table_name.strip():
-        raise ValueError("Имя таблицы должно быть непустым.")
-
+def create_table(table_name, columns_input):
     table_file = DATA_DIR / f"{table_name}.json"
     if table_file.exists():
         raise ValueError(f'Таблица "{table_name}" уже существует.')
 
+    columns = {"ID": "int"}
     valid_types = {"int", "str", "bool"}
-
-    columns: dict[str, str] = {
-        "ID": "int"
-    }
 
     for col in columns_input:
         if ":" not in col:
-            raise ValueError(
-                f'Некорректное значение "{col}". Используйте формат name:type'
-            )
+            raise ValueError("Формат столбца: name:type")
 
         name, typ = col.split(":", 1)
 
-        if not name.isidentifier():
-            raise ValueError(f'Некорректное имя столбца: "{name}"')
-
         if typ not in valid_types:
-            raise ValueError(
-                f'Некорректный тип "{typ}". Допустимы: int, str, bool'
-            )
+            raise ValueError(f"Недопустимый тип: {typ}")
 
         if name in columns:
-            raise ValueError(f'Столбец "{name}" уже существует.')
+            raise ValueError(f"Столбец {name} уже существует")
 
         columns[name] = typ
 
@@ -101,7 +84,7 @@ def create_table(table_name: str, columns_input: list[str]) -> None:
         "rows": []
     }
 
-    table_file.parent.mkdir(parents=True, exist_ok=True)
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
     table_file.write_text(
         json.dumps(table_data, ensure_ascii=False, indent=2),
         encoding="utf-8"
@@ -111,16 +94,10 @@ def create_table(table_name: str, columns_input: list[str]) -> None:
 
 
 # =========================
-# DROP_TABLE
+# DROP TABLE
 # =========================
 
-def drop_table(table_name: str) -> None:
-    """
-    Удаляет таблицу (json-файл)
-    """
-    if not table_name or not table_name.strip():
-        raise ValueError("Имя таблицы должно быть непустым.")
-
+def drop_table(table_name):
     table_file = DATA_DIR / f"{table_name}.json"
     if not table_file.exists():
         raise ValueError(f'Таблица "{table_name}" не существует.')
@@ -130,10 +107,10 @@ def drop_table(table_name: str) -> None:
 
 
 # =========================
-# WELCOME / CLI
+# CLI
 # =========================
 
-def run() -> None:
+def run():
     print("Primitive DB запущена.")
     _print_help()
 
@@ -144,74 +121,151 @@ def run() -> None:
                 continue
 
             tokens = raw.split()
-            cmd = tokens[0]
+            cmd = tokens[0].lower()
 
-            if cmd == "help":
+            # ---------- EXIT ----------
+            if cmd == "exit":
+                print("Выход.")
+                break
+
+            # ---------- HELP ----------
+            elif cmd == "help":
                 _print_help()
 
+            # ---------- LIST ----------
             elif cmd == "list_tables":
                 list_tables()
-            
 
+            # ---------- CREATE ----------
+            elif cmd == "create_table":
+                if len(tokens) < 3:
+                    raise ValueError("create_table <table> col:type ...")
+
+                create_table(tokens[1], tokens[2:])
+
+            # ---------- DROP ----------
+            elif cmd == "drop_table":
+                if len(tokens) != 2:
+                    raise ValueError("drop_table <table>")
+                drop_table(tokens[1])
+
+            # ---------- INSERT ----------
             elif raw.lower().startswith("insert into"):
                 try:
-                    before_values, values_part = raw.split("values", 1)
+                    before, values_part = raw.split("values", 1)
                 except ValueError:
                     raise ValueError(
-                        "Использование: insert into <table> values (<v1>, <v2>, ...)"
+                        "Использование: insert into <table> values <v1> <v2> ..."
                     )
 
-                tokens_before = before_values.strip().split()
-
+                tokens_before = before.strip().split()
                 if len(tokens_before) != 3 or tokens_before[1] != "into":
                     raise ValueError(
-                        "Использование: insert into <table> values (...)")
+                        "Использование: insert into <table> values ..."
+                    )
 
                 table_name = tokens_before[2]
 
                 values_part = values_part.strip()
-                if not (values_part.startswith("(") and values_part.endswith(")")):
-                    raise ValueError("Значения должны быть в скобках (...)")
 
-                values_str = values_part[1:-1]
+                # --- ВОТ ЭТО КЛЮЧЕВОЕ МЕСТО ---
+                # поддержка:
+                # 1) Alice 25 true
+                # 2) (Alice, 25, true)
+                if values_part.startswith("(") and values_part.endswith(")"):
+                    values_part = values_part[1:-1]
+                    raw_values = [v.strip() for v in values_part.split(",")]
+                else:
+                    raw_values = values_part.split()
 
-                values = parse_values(values_str)
+                values = []
+                for v in raw_values:
+                    if v.lower() == "true":
+                        values.append(True)
+                    elif v.lower() == "false":
+                        values.append(False)
+                    else:
+                        try:
+                            values.append(int(v))
+                        except ValueError:
+                            values.append(v.strip('"').strip("'"))
+                # --- КОНЕЦ ФИКСА ---
 
                 table_data = load_table_data(table_name)
 
-                row = insert(table_data, values)
+                metadata = {
+                    table_name: {
+                        "columns": table_data["columns"]
+                    }
+                }
 
-                save_table_data(table_name, table_data)
+                row = insert(metadata, table_name, values)
+                
 
                 print("OK: добавлена запись:", row)
+            # ---------- SELECT ----------
+            elif cmd == "select":
+                if tokens[1] != "from":
+                    raise ValueError("select from <table>")
 
+                table_name = tokens[2]
+                table_data = load_table_data(table_name)
 
-           
+                condition = None
+                if "where" in tokens:
+                    where_expr = " ".join(tokens[tokens.index("where") + 1:])
+                    condition = parse_where(where_expr)
 
+                rows = select(table_data, condition)
 
-            elif cmd == "create_table":
-                if len(tokens) < 3:
-                    raise ValueError(
-                        "Использование: create_table <table> name:type ..."
-                    )
+                if not rows:
+                    print("Нет данных.")
+                else:
+                    table = PrettyTable()
+                    table.field_names = rows[0].keys()
 
+                    for row in rows:
+                        table.add_row(row.values())
+
+                    print(table)
+
+            # ---------- UPDATE ----------
+            elif cmd == "update":
                 table_name = tokens[1]
-                columns_input = tokens[2:]
 
-                create_table(table_name, columns_input)
+                set_idx = tokens.index("set")
+                where_idx = tokens.index("where")
 
+                set_expr = " ".join(tokens[set_idx + 1:where_idx])
+                where_expr = " ".join(tokens[where_idx + 1:])
 
-            elif cmd == "drop_table":
-                if len(tokens) != 2:
-                    raise ValueError("Использование: drop_table <table>")
-                drop_table(tokens[1])
+                set_clause = parse_set(set_expr)
+                where_clause = parse_where(where_expr)
 
-            elif cmd == "exit":
-                print("Выход.")
-                break
+                table_data = load_table_data(table_name)
+                updated = update(table_data, set_clause, where_clause)
+                save_table_data(table_name, table_data)
 
-            else:
-                print(f"Неизвестная команда: {cmd}")
+                print(f"Обновлено записей: {len(updated)}")
+            # ---------- DELETE ----------
+            elif cmd == "delete":
+                if tokens[1] != "from":
+                    raise ValueError("Использование: delete from <table> where <условие>")
+
+                table_name = tokens[2]
+
+                if "where" not in tokens:
+                    raise ValueError("Для delete обязательно условие where")
+
+                where_idx = tokens.index("where")
+                where_expr = " ".join(tokens[where_idx + 1:])
+                where_clause = parse_where(where_expr)
+
+                table_data = load_table_data(table_name)
+                deleted = delete(table_data, where_clause)
+                save_table_data(table_name, table_data)
+
+                print(f"Удалено записей: {len(deleted)}")
 
         except Exception as exc:
             print(f"Ошибка: {exc}")

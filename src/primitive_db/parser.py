@@ -1,48 +1,52 @@
-import shlex
-
-def parse_values(values_str: str, single: bool = False):
+def _auto_cast(value):
     """
-    '"Sergei", 28, true' → ['Sergei', 28, True]
-    "name='Bob'" (single=True) → ('name', 'Bob')
+    Преобразует строку в int / bool / str
     """
-    values_str = values_str.strip()
+    value = value.strip()
 
-    if single:
-        if "=" not in values_str:
-            raise ValueError("Ожидается выражение вида col=value")
-        key, val = values_str.split("=", 1)
-        key = key.strip()
-        val = val.strip().strip('"').strip("'")
-        val = _auto_cast(val)
-        return key, val
-
-    parts = shlex.split(values_str)
-    result = [_auto_cast(val) for val in parts]
-    return result
-
-
-def parse_condition(tokens: list[str]) -> dict:
-    """
-    ['id=5'] или ['name="Bob"'] → {'id': 5}
-    """
-    expr = " ".join(tokens).strip()
-    if "=" not in expr:
-        raise ValueError("Ожидается выражение col=value")
-    key, val = expr.split("=", 1)
-    key = key.strip()
-    val = val.strip().strip('"').strip("'")
-    return {key: _auto_cast(val)}
-
-
-def _auto_cast(val: str):
-    """
-    Преобразует строку в int, bool или оставляет str
-    """
-    if val.lower() == "true":
+    if value.lower() == "true":
         return True
-    if val.lower() == "false":
+    if value.lower() == "false":
         return False
+
     try:
-        return int(val)
+        return int(value)
     except ValueError:
-        return val
+        return value.strip('"').strip("'")
+
+
+# =========================
+# WHERE
+# =========================
+
+def parse_where(expr):
+    """
+    'age = 28'        -> {'age': 28}
+    'name = "Alice"' -> {'name': 'Alice'}
+    """
+
+    if "=" not in expr:
+        raise ValueError("Ожидается условие вида: column = value")
+
+    column, value = expr.split("=", 1)
+
+    column = column.strip()
+    value = value.strip()
+
+    if not column:
+        raise ValueError("Имя столбца не может быть пустым")
+
+    return {column: _auto_cast(value)}
+
+
+# =========================
+# SET
+# =========================
+
+def parse_set(expr):
+    """
+    'age = 30'        -> {'age': 30}
+    'name = "Bob"'   -> {'name': 'Bob'}
+    """
+
+    return parse_where(expr)

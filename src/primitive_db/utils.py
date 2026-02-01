@@ -1,6 +1,9 @@
 import json
 from pathlib import Path
 
+
+
+
 # Константы путей
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 print(BASE_DIR)
@@ -79,3 +82,5 @@ def save_table_data(table_name, data):
 
     with file_path.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+        # print("SAVE TO:", (DATA_DIR / f"{table_name}.json").resolve())
+        

@@ -3,8 +3,11 @@ from typing import Any
 
 from src.primitive_db.utils import DATA_DIR, load_table_data, save_table_data
 
-SUPPORTED_TYPES: set[str] = {"int", "str", "bool"}
-
+SUPPORTED_TYPES = {
+    "int": int,
+    "str": str,
+    "bool": bool,
+}
 
 def create_table(
     metadata: dict[str, Any],
@@ -231,12 +234,15 @@ def insert(metadata, table_name, values):
         if not isinstance(value, expected_type):
             raise TypeError(
                 f'Поле "{col_name}" ожидает {expected_type_name}, '
-                f"получено {type(value).__name__}"
+                f"получено {type(value).name}"
             )
 
         new_row[col_name] = value
 
     # 5. Добавление строки
     rows.append(new_row)
+
+    # 6. СОХРАНЕНИЕ В JSON ПРЯМО ТУТ
+    save_table_data(table_name, table_data)
 
     return new_row
