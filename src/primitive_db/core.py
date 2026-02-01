@@ -1,6 +1,7 @@
 from typing import Any
+# from src.primitive_db.utils import METADATA_PATH, save_metadata,
 
-from src.primitive_db.utils import DATA_DIR, METADATA_PATH, save_metadata, load_table_data, save_table_data
+from src.primitive_db.utils import DATA_DIR, load_table_data, save_table_data
 
 SUPPORTED_TYPES: set[str] = {"int", "str", "bool"}
 
@@ -127,136 +128,115 @@ def drop_table(metadata: dict[str, Any], table_name: str) -> dict[str, Any]:
     return metadata
 
 
-
-def select(
-    table_data,
-    where_clause
-):
+def select(table_data, where_clause=None):
     rows = table_data["rows"]
 
     if where_clause is None:
         return rows.copy()
 
-    result: list[dict[str, Any]] = []
-
+    result = []
     for row in rows:
-        match = True
+        ok = True
         for key, value in where_clause.items():
             if row.get(key) != value:
-                match = False
+                ok = False
                 break
-
-        if match:
+        if ok:
             result.append(row)
 
     return result
 
 
-def delete(
-    table_data,
-    where_clause
-):
+
+def delete(table_data, where_clause):
     rows = table_data["rows"]
-    remaining_rows: list[dict[str, Any]] = []
-    deleted_rows: list[dict[str, Any]] = []
+    remaining = []
+    deleted = []
 
     for row in rows:
-        match = True
+        ok = True
         for key, value in where_clause.items():
             if row.get(key) != value:
-                match = False
+                ok = False
                 break
 
-        if match:
-            deleted_rows.append(row)
+        if ok:
+            deleted.append(row)
         else:
-            remaining_rows.append(row)
+            remaining.append(row)
 
-    table_data["rows"] = remaining_rows
-    return deleted_rows
+    table_data["rows"] = remaining
+    return deleted
 
-def update(
-    table_data,
-    set_clause,
-    where_clause
-):
+
+
+def update(table_data, set_clause, where_clause):
     rows = table_data["rows"]
-    updated_rows: list[dict[str, Any]] = []
+    updated = []
 
     for row in rows:
-        match = True
+        ok = True
         for key, value in where_clause.items():
             if row.get(key) != value:
-                match = False
+                ok = False
                 break
 
-        if match:
+        if ok:
             for set_key, set_value in set_clause.items():
                 if set_key == "ID":
-                    raise ValueError("ID нельзя изменять.")
+                    raise ValueError("ID изменять нельзя")
                 row[set_key] = set_value
 
-            updated_rows.append(row)
+            updated.append(row)
 
-    return updated_rows
+    return updated
 
 
-def insert(
-    metadata: dict[str, Any],
-    table_name: str,
-    values: list[Any],
-):
-    # 1. Проверка таблицы
-    if table_name not in metadata.get("tables", {}):
+
+
+def insert(metadata, table_name, values):
+    # 1. Проверка существования таблицы
+    if table_name not in metadata:
         raise ValueError(f'Таблица "{table_name}" не существует.')
 
-    table_meta = metadata["tables"][table_name]
-    columns = table_meta["columns"]
-
-    column_names = list(columns.keys())
+    table_schema = metadata[table_name]["columns"]
+    column_names = list(table_schema.keys())
 
     if column_names[0] != "ID":
-        raise ValueError("Первый столбец должен быть ID.")
+        raise ValueError("Первый столбец должен быть ID")
 
-    expected_values_count = len(column_names) - 1
-
-    # 2. Проверка количества значений (без ID)
-    if len(values) != expected_values_count:
+    expected_count = len(column_names) - 1
+    if len(values) != expected_count:
         raise ValueError(
-            f"Ожидалось {expected_values_count} значений, получено {len(values)}."
+            f"Ожидалось {expected_count} значений, получено {len(values)}"
         )
 
-    # 3. Загрузка данных таблицы
+    # 2. Загрузка данных таблицы
     table_data = load_table_data(table_name)
     rows = table_data["rows"]
 
-    # 4. Генерация нового ID
+    # 3. Генерация нового ID
     if rows:
-        max_id = max(row["ID"] for row in rows)
-        new_id = max_id + 1
+        new_id = max(row["ID"] for row in rows) + 1
     else:
         new_id = 1
 
-    # 5. Валидация типов и сбор записи
-    new_row: dict[str, Any] = {"ID": new_id}
+    # 4. Валидация типов и сбор записи
+    new_row = {"ID": new_id}
 
-    for value, column_name in zip(values, column_names[1:]):
-        expected_type_name = columns[column_name]
-        expected_type = SUPPORTED_TYPES.get(expected_type_name)
-
-        if expected_type is None:
-            raise ValueError(f"Неподдерживаемый тип: {expected_type_name}")
+    for value, col_name in zip(values, column_names[1:]):
+        expected_type_name = table_schema[col_name]
+        expected_type = SUPPORTED_TYPES[expected_type_name]
 
         if not isinstance(value, expected_type):
             raise TypeError(
-                f'Поле "{column_name}" ожидает {expected_type_name}, '
-                f"получено {type(value).name}"
+                f'Поле "{col_name}" ожидает {expected_type_name}, '
+                f"получено {type(value).__name__}"
             )
 
-        new_row[column_name] = value
+        new_row[col_name] = value
 
-    # 6. Добавление и сохранение
+    # 5. Добавление строки
     rows.append(new_row)
-    save_table_data(table_name, table_data)
 
     return new_row

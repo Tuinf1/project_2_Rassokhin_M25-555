@@ -201,9 +201,6 @@ def run() -> None:
                 create_table(table_name, columns_input)
 
 
-            
-
-
             elif cmd == "drop_table":
                 if len(tokens) != 2:
                     raise ValueError("Использование: drop_table <table>")
