@@ -47,8 +47,6 @@ Primitive DB — это учебная embedded-база данных, реал�
     запрос подтверждения перед удалением таблицы (@confirm_action)
     измерение времени выполнения операций (@log_time)
     кеширование результатов SELECT-запросов (create_cacher)
-    демонстрация повторного SELECT с использованием кэша
-    корректная работа всех декораторов в реальном сценарии
 
 [![asciinema demo](https://asciinema.org/a/bxxYMkGYUufHvhtd)](https://asciinema.org/a/bxxYMkGYUufHvhtd)
 
