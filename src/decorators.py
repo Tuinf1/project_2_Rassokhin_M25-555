@@ -1,22 +1,8 @@
 # src/decorators.py
 
-# def handle_db_errors(func):
-#     def wrapper(*args, **kwargs):
-#         try:
-#             return func(*args, **kwargs)
-#         except FileNotFoundError:
-#             print("\u274c Ошибка: файл данных не найден. Возможно, база данных не инициализирована.")
-#         except KeyError as e:
-#             print(f"\u26a0\ufe0f Ошибка: таблица или столбец \"{e}\" не найден.")
-#         except ValueError as e:
-#             print(f"\u26a1\ufe0f Ошибка валидации: {e}")
-#         except Exception as e:
-#             print(f"\ud83d\udea8 Произошла непредвиденная ошибка: {e}")
 
-#     return wrapper
-
-from functools import wraps
 import time
+from functools import wraps
 
 
 def handle_db_errors(func):

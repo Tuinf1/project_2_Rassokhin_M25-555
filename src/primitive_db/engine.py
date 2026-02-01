@@ -1,16 +1,22 @@
-import json
-
 from prettytable import PrettyTable
 
-from src.primitive_db.core import delete, info_table, insert, select, update, list_tables, create_table, _print_help
+from src.decorators import confirm_action, create_cacher, handle_db_errors
+from src.primitive_db.core import (
+    _print_help,
+    create_table,
+    delete,
+    info_table,
+    insert,
+    list_tables,
+    select,
+    update,
+)
 from src.primitive_db.parser import parse_set, parse_where
 from src.primitive_db.utils import (
     DATA_DIR,
     load_table_data,
     save_table_data,
 )
-
-from src.decorators import handle_db_errors, confirm_action, create_cacher
 
 cache_select = create_cacher()
 
