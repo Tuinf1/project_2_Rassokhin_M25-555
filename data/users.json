@@ -8,20 +8,14 @@
   "rows": [
     {
       "ID": 1,
-      "name": "Alice Smith",
-      "age": 25,
-      "is_active": false
-    },
-    {
-      "ID": 2,
-      "name": "Alice",
-      "age": 25,
+      "name": "Ivan",
+      "age": 30,
       "is_active": true
     },
     {
-      "ID": 3,
-      "name": "Alice",
-      "age": 25,
+      "ID": 2,
+      "name": "Sergei",
+      "age": 28,
       "is_active": true
     }
   ]

@@ -1,6 +1,6 @@
 from typing import Any
 # from src.primitive_db.utils import METADATA_PATH, save_metadata,
-
+import json
 from src.primitive_db.utils import DATA_DIR, load_table_data, save_table_data
 
 SUPPORTED_TYPES = {
@@ -149,7 +149,35 @@ def select(table_data, where_clause=None):
 
     return result
 
+def info_table(table_name: str) -> None:
+    if not table_name or not table_name.strip():
+        raise ValueError("Имя таблицы должно быть непустым.")
 
+    table_file = DATA_DIR / f"{table_name}.json"
+    if not table_file.exists():
+        raise ValueError(f'Таблица "{table_name}" не существует.')
+
+    try:
+        with table_file.open("r", encoding="utf-8") as f:
+            table_data = json.load(f)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Файл {table_file} повреждён.") from exc
+
+    if not isinstance(table_data, dict):
+        raise ValueError("Некорректная структура таблицы.")
+
+    columns = table_data.get("columns")
+    rows = table_data.get("rows")
+
+    if not isinstance(columns, dict) or not isinstance(rows, list):
+        raise ValueError("Некорректная структура таблицы.")
+
+    print(f"Таблица: {table_name}")
+    print("Столбцы:")
+    for name, typ in columns.items():
+        print(f"  - {name}: {typ}")
+
+    print(f"Количество строк: {len(rows)}")
 
 def delete(table_data, where_clause):
     rows = table_data["rows"]
