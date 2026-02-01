@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "project-2-rassokhin-m25-555"
-version = "0.1.2"
+version = "0.2.1"
 description = ""
 authors = ["Rassokhin Vladislav <rassokhinvladislav@mail.ru>"]
 readme = "README.md"
