@@ -1,9 +1,6 @@
 import json
 from pathlib import Path
 
-
-
-
 # Константы путей
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 print(BASE_DIR)

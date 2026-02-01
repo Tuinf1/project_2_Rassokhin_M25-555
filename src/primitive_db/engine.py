@@ -1,14 +1,15 @@
 import json
 
+from prettytable import PrettyTable
+
+from src.primitive_db.core import delete, info_table, insert, select, update
+from src.primitive_db.parser import parse_set, parse_where
 from src.primitive_db.utils import (
+    DATA_DIR,
     load_table_data,
     save_table_data,
-    DATA_DIR,
 )
-from src.primitive_db.parser import parse_where, parse_set
-from src.primitive_db.core import insert, select, update, delete, info_table
 
-from prettytable import PrettyTable
 # =========================
 # HELP
 # =========================
@@ -24,7 +25,8 @@ def _print_help():
       "добавить запись")
     print("<command> select from <имя_таблицы> [where <столбец>=<значение>] - " +
       "вывести записи")
-    print("<command> update <имя_таблицы> set <столбец> = <значение> where <условие> -" +
+    print("<command> update <имя_таблицы> set <столбец> = "\
+    "<значение> where <условие> -" +
       "обновить")
     print("<command> delete from <имя_таблицы> where <столбец>=<значение> -" +
       "удалить запись")
@@ -160,7 +162,8 @@ def run():
                 tokens = raw.strip().split()
 
                 if len(tokens) < 3:
-                    raise ValueError("Формат: insert [into] <table> values (...) или column=value ...")
+                    raise ValueError("Формат: insert [into] <table>" \
+                    "values (...) или column=value ...")
 
                 # 1. Определяем имя таблицы
                 if tokens[1].lower() == "into":
@@ -206,7 +209,8 @@ def run():
                     kv_pairs = {}
                     for arg in args:
                         if "=" not in arg:
-                            raise ValueError(f"Неверный формат: {arg}. Используйте key=value")
+                            raise ValueError(f"Неверный \
+                                             формат: {arg}. Используйте key=value")
 
                         key, val = arg.split("=", 1)
                         key = key.strip()
@@ -235,7 +239,8 @@ def run():
                     values = []
                     for col in expected_columns:
                         if col not in kv_pairs:
-                            raise ValueError(f"Не передано значение для колонки '{col}'")
+                            raise ValueError(f"Не передано \
+                                             значение для колонки '{col}'")
                         values.append(kv_pairs[col])
 
                     metadata = {table_name: {"columns": columns}}
@@ -298,7 +303,8 @@ def run():
             # ---------- DELETE ----------
             elif cmd == "delete":
                 if tokens[1] != "from":
-                    raise ValueError("Использование: delete from <table> where <условие>")
+                    raise ValueError("Использование: delete " \
+                    "from <table> where <условие>")
 
                 table_name = tokens[2]
 
